@@ -6,12 +6,10 @@ app = Flask(__name__)
 
 def log_request(req: 'flask_request', res: str) -> None:
     with open('vsearch.log','a') as log:
-        # print(req.form,file=log, end='|')
-        # print(req.remote_addr, file=log, end='|')
-        # print(req.user_agent, file=log, end='|')
-        # print(res, file=log)
-        contents = log.readlines()
-        print(' '.join(contents))
+        print(req.form, file=log, end='|')
+        print(req.remote_addr, file=log, end='|')
+        print(req.user_agent, file=log, end='|')
+        print(res, file=log)
 
 
 @app.route('/search4', methods=['POST'])
@@ -20,7 +18,7 @@ def search() -> str:
     letters = request.form['letters']
     result = str(search4letters(phrase, letters))
     log_request(request, result)
-    return render_template('results.html', the_title='Search Results', result=result,
+    return render_template('results.html', the_title='Search Results', the_results=result,
                            phrase=phrase, letters=letters)
 
 @app.route('/')
