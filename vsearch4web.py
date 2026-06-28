@@ -1,16 +1,28 @@
 from flask import Flask, render_template, request
 from markupsafe import escape
 from vsearch import search4letters
+from DBcm import UseDatabase
 
 app = Flask(__name__)
 
 def log_request(req: 'flask_request', res: str) -> None:
-    with open('vsearch.log','a') as log:
-        print(req.form, file=log, end='|')
-        print(req.remote_addr, file=log, end='|')
-        print(req.user_agent, file=log, end='|')
-        print(res, file=log)
-
+    """Log details of the web request and the results."""
+    dbconfig = {
+        'host': '127.0.0.1',
+        'user':'vsearch',
+        'password':'welcome1',
+        'database':'vsearchlogDB',
+    }
+    with UseDatabase(dbconfig) as cursor:
+        _SQL = """insert into log
+                  (phrase, letters, ip, browser_string, results)
+                  values
+                  (%s, %s, %s, %s, %s)"""
+        cursor.execute(_SQL, (req.form['phrase'],
+                              req.form['letters'],
+                              req.remote_addr,
+                              req.user_agent.string,
+                              res))
 
 @app.route('/search4', methods=['POST'])
 def search() -> str:
