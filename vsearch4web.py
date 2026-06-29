@@ -4,16 +4,16 @@ from vsearch import search4letters
 from DBcm import UseDatabase
 
 app = Flask(__name__)
-
-def log_request(req: 'flask_request', res: str) -> None:
-    """Log details of the web request and the results."""
-    dbconfig = {
+app.config['dbconfig'] = {
         'host': '127.0.0.1',
         'user':'vsearch',
         'password':'welcome1',
         'database':'vsearchlogDB',
     }
-    with UseDatabase(dbconfig) as cursor:
+
+def log_request(req: 'flask_request', res: str) -> None:
+    """Log details of the web request and the results."""
+    with UseDatabase(app.config['dbconfig']) as cursor:
         _SQL = """insert into log
                   (phrase, letters, ip, browser_string, results)
                   values
@@ -42,13 +42,18 @@ def entry_page() -> 'html':
 @app.route('/viewlog')
 def view_log() -> 'html':
     contents = []
-    with open('vsearch.log') as log:
-        #contents = log.read()
-        for line in log:
-            contents.append([])
-            for item in line.split('|'):
-                contents[-1].append(escape(item))
-    title=['Form Data', 'Remote Addr', 'User Agent', 'Results']
+    # with open('vsearch.log') as log:
+    #     #contents = log.read()
+    #     for line in log:
+    #         contents.append([])
+    #         for item in line.split('|'):
+    #             contents[-1].append(escape(item))
+    with UseDatabase(app.config['dbconfig']) as cursor:
+        _SQL = 'select phrase, letters, ip, browser_string, results from log'
+        cursor.execute(_SQL)
+        contents = cursor.fetchall()
+
+    title=['Phrase', 'Letters', 'Remote Addr', 'User Agent', 'Results']
     return render_template('viewlog.html', the_title='View Log', the_row_titles=title, the_data=contents)
 
 
